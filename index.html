@@ -124,11 +124,19 @@
             border-style: dashed;
         }
 
-        #toggleControlsBtn {
+        #controlToggleCluster {
             position: fixed;
             top: 14px;
             right: 14px;
-            z-index: 101;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 102;
+        }
+
+        #toggleControlsBtn {
+            position: relative;
+            z-index: 1;
             background: var(--panel);
             color: var(--text);
             border: 1px solid var(--border);
@@ -147,9 +155,7 @@
         }
 
         .collapsed-controls {
-            position: fixed;
-            right: 14px;
-            top: 64px;
+            position: relative;
             display: flex;
             gap: 8px;
             align-items: center;
@@ -163,7 +169,6 @@
             pointer-events: none;
             transform: translateY(-10px);
             transition: opacity 0.25s ease, transform 0.25s ease;
-            z-index: 102;
         }
 
         .collapsed-controls.visible {
@@ -184,9 +189,10 @@
                 padding: 12px;
             }
 
-            #toggleControlsBtn {
+            #controlToggleCluster {
                 top: 10px;
                 right: 10px;
+                gap: 8px;
             }
         }
 
@@ -290,11 +296,12 @@
 <body>
     <video id="videoBackground" autoplay muted playsinline></video>
 
-    <button id="toggleControlsBtn">Hide Controls</button>
-
-    <div id="collapsedControls" class="collapsed-controls" aria-hidden="true">
-        <span class="label">Quick control</span>
-        <button id="collapsedPlayBtn">Play</button>
+    <div id="controlToggleCluster">
+        <div id="collapsedControls" class="collapsed-controls" aria-hidden="true">
+            <span class="label">Quick control</span>
+            <button id="collapsedPlayBtn">Play</button>
+        </div>
+        <button id="toggleControlsBtn">Hide Controls</button>
     </div>
 
     <main>
