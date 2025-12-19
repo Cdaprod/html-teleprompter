@@ -22,7 +22,7 @@ try {
   const defaultDocPath = path.join(__dirname, '..', 'docs', defaultDocName);
 
   // HTML surface sanity checks
-  ['fileSelect', 'content', 'docsFileName', 'addDocBtn', 'playBtn'].forEach((id) => {
+  ['fileSelect', 'content', 'docsFileName', 'addDocBtn', 'playBtn', 'collapsedPlayBtn'].forEach((id) => {
     assert(
       indexHtml.includes(`id="${id}"`),
       `Expected teleprompter UI element with id="${id}" in index.html`

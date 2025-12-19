@@ -41,6 +41,7 @@ When neither the manifest nor `docs/demo-list.txt` is reachable (for example, of
 - **Play/Pause**: button or `Space`.
 - **Speed**: +/- buttons or `ArrowUp` / `ArrowDown`.
 - **Toggle controls**: button or `H` / `Escape`.
+- **Collapsed view**: when the toolbar is hidden, a floating Quick control keeps Play/Pause accessible.
 - **Mirror / Split view**: buttons in the toolbar.
 
 ## Testing
