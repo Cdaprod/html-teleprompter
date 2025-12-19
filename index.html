@@ -5,13 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Davids Teleprompter</title>
     <style>
+        :root {
+            --bg: #050505;
+            --panel: rgba(20, 20, 20, 0.85);
+            --border: #303030;
+            --accent: #46c2ff;
+            --text: #f6f6f6;
+            --muted: #b0b0b0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            padding: 20px;
-            font-family: system-ui, -apple-system, sans-serif;
-            background: #000000;
-            color: #ffffff;
-            overflow: hidden;
+            padding: 0;
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at 20% 20%, rgba(70, 194, 255, 0.08), transparent 35%),
+                        radial-gradient(circle at 80% 0%, rgba(255, 122, 0, 0.08), transparent 30%),
+                        var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
         }
 
         #videoBackground {
@@ -24,114 +40,137 @@
             z-index: -1;
             opacity: 0;
             transition: opacity 0.3s;
+            filter: saturate(1.1) brightness(0.7);
         }
 
         #videoBackground.active {
-            opacity: 1;
+            opacity: 0.75;
         }
 
         .controls {
-            position: fixed;
+            position: sticky;
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(45, 45, 45, 0.95);
-            padding: 12px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+            background: var(--panel);
+            padding: 14px 18px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 10px 14px;
             align-items: center;
-            border-bottom: 1px solid #404040;
+            border-bottom: 1px solid var(--border);
             z-index: 100;
-            transition: transform 0.3s ease;
-            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(14px) saturate(130%);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         .controls.hidden {
             transform: translateY(-100%);
+            box-shadow: none;
         }
 
-        .controls > * {
-            margin: 2px;
-            flex-shrink: 0;
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
         }
 
-        select, button {
-            background: #404040;
-            color: white;
-            border: 1px solid #505050;
-            padding: 8px 12px;
-            border-radius: 4px;
+        .control-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+        }
+
+        select, button, input[type="text"], input[type="number"] {
+            background: #161616;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            border-radius: 8px;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: transform 0.12s ease, border-color 0.2s ease, box-shadow 0.2s ease;
             white-space: nowrap;
         }
 
-        select:hover, button:hover {
-            background: #505050;
-            border-color: #606060;
+        select:hover, button:hover, input[type="text"]:focus, input[type="number"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(70, 194, 255, 0.15);
+        }
+
+        button:active {
+            transform: translateY(1px);
         }
 
         #fileSelect {
-            min-width: 150px;
-            max-width: 300px;
+            min-width: 200px;
+            max-width: 360px;
             flex: 1;
         }
 
-        /* Toggle button that stays visible */
+        .ghost-btn {
+            background: transparent;
+            color: var(--muted);
+            border-style: dashed;
+        }
+
         #toggleControlsBtn {
             position: fixed;
-            top: 10px;
-            right: 10px;
+            top: 14px;
+            right: 14px;
             z-index: 101;
-            background: rgba(64, 64, 64, 0.9);
-            color: white;
-            border: 1px solid #505050;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 14px;
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.2s;
-            opacity: 0.7;
+            opacity: 0.9;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
         }
 
         #toggleControlsBtn:hover {
             opacity: 1;
-            background: #505050;
+            border-color: var(--accent);
         }
 
         @media (max-width: 768px) {
             .controls {
-                padding: 8px;
+                padding: 12px;
             }
 
-            .file-controls {
-                width: 100%;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 4px;
-            }
-
-            #fileSelect {
-                width: 100%;
-                min-width: 100%;
+            #toggleControlsBtn {
+                top: 10px;
+                right: 10px;
             }
         }
 
+        main {
+            padding: 32px 24px 80px;
+        }
+
         .content {
-            margin-top: 60px;
+            margin-top: 32px;
             white-space: pre-wrap;
-            font-size: 24px;
-            line-height: 1.5;
-            padding: 20px;
-            max-width: 800px;
+            font-size: 26px;
+            line-height: 1.55;
+            padding: 28px;
+            max-width: 900px;
             margin-left: auto;
             margin-right: auto;
-            transition: margin-top 0.3s ease;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            transition: margin-top 0.3s ease, max-width 0.3s ease;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.85);
             position: relative;
             z-index: 1;
+            border-radius: 16px;
+            background: linear-gradient(145deg, rgba(20, 20, 20, 0.95), rgba(15, 15, 15, 0.8));
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         .content.controls-hidden {
@@ -144,24 +183,44 @@
 
         .split-view {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            max-width: 1600px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            max-width: 1800px;
         }
 
         .speed-control {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
         }
 
-        button:active {
-            transform: scale(0.98);
+        .input-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
         }
 
-        .file-controls {
+        .range-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            width: 100%;
+        }
+
+        .range-control {
             display: flex;
-            gap: 8px;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .range-control label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .range-control input[type="range"] {
+            accent-color: var(--accent);
         }
 
         #uploadInput {
@@ -172,104 +231,138 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: #404040;
-            padding: 10px 20px;
-            border-radius: 4px;
+            background: #161616;
+            padding: 12px 18px;
+            border-radius: 12px;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s, transform 0.3s;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+            transform: translateY(20px);
         }
 
         .status.show {
             opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
     <video id="videoBackground" autoplay muted playsinline></video>
-    
+
     <button id="toggleControlsBtn">Hide Controls</button>
 
-    <div class="controls" id="controls">
-        <div class="file-controls">
-            <button id="cameraBtn">Use Camera</button>
-            <input type="text" id="videoUrl" placeholder="Or enter stream URL (http://192.168.1.100:8080/video)" 
-                   style="min-width: 300px; background: #404040; color: white; border: 1px solid #505050; padding: 8px 12px; border-radius: 4px;">
-            <button id="loadVideoBtn">Load Stream</button>
-            <button id="stopVideoBtn">Stop Video</button>
-        </div>
-        
-        <div class="file-controls">
-            <select id="fileSelect">
-                <option value="">Select transcript or upload...</option>
-            </select>
-            <input type="file" id="uploadInput" accept=".md,.txt" multiple>
-            <button id="uploadBtn">Upload MD File</button>
-            <button id="saveStorageBtn">Save Transcripts</button>
-            <button id="loadStorageBtn">Load Transcripts</button>
+    <main>
+        <div class="controls" id="controls">
+            <div class="control-group">
+                <div class="input-stack" style="flex: 1; min-width: 260px;">
+                    <span class="control-title">Video background</span>
+                    <div class="control-group">
+                        <button id="cameraBtn">Use Camera</button>
+                        <input type="text" id="videoUrl" placeholder="Stream URL (http://192.168.1.100:8080/video)" style="flex: 1; min-width: 180px;">
+                        <button id="loadVideoBtn">Load Stream</button>
+                        <button id="stopVideoBtn" class="ghost-btn">Stop</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group" style="grid-column: span 2;">
+                <div class="input-stack" style="width: 100%;">
+                    <span class="control-title">Transcript library (docs/ and uploads)</span>
+                    <div class="control-group" style="width: 100%;">
+                        <select id="fileSelect">
+                            <option value="">Select transcript or upload...</option>
+                        </select>
+                        <input type="file" id="uploadInput" accept=".md,.txt" multiple>
+                        <button id="uploadBtn">Upload File</button>
+                        <button id="saveStorageBtn">Save All</button>
+                        <button id="loadStorageBtn">Load Saved</button>
+                    </div>
+                    <div class="control-group" style="width: 100%;">
+                        <input type="text" id="docsFileName" placeholder="docs filename (e.g. demo-list.txt)" style="flex: 1; min-width: 180px;">
+                        <button id="addDocBtn">Add from docs/</button>
+                        <button id="refreshDocsBtn" class="ghost-btn">Refresh docs/ list</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group" style="flex-wrap: nowrap; gap: 10px;">
+                <button id="playBtn">Play</button>
+                <button id="mirrorBtn">Mirror</button>
+                <button id="splitBtn">Split View</button>
+                <div class="speed-control">
+                    <button id="decreaseSpeed">-</button>
+                    <span id="speedDisplay">1.0x</span>
+                    <button id="increaseSpeed">+</button>
+                </div>
+            </div>
+
+            <div class="range-stack" style="grid-column: span 2;">
+                <div class="range-control">
+                    <label for="fontSizeControl">Font size (<span id="fontSizeValue">26</span>px)</label>
+                    <input id="fontSizeControl" type="range" min="16" max="60" value="26">
+                </div>
+                <div class="range-control">
+                    <label for="lineHeightControl">Line height (<span id="lineHeightValue">1.55</span>)</label>
+                    <input id="lineHeightControl" type="range" min="1.2" max="2.2" step="0.05" value="1.55">
+                </div>
+                <div class="range-control">
+                    <label for="widthControl">Max width (<span id="widthValue">900</span>px)</label>
+                    <input id="widthControl" type="range" min="500" max="1400" step="50" value="900">
+                </div>
+            </div>
         </div>
 
-        <button id="playBtn">Start/Stop</button>
-        <button id="mirrorBtn">Mirror</button>
-        <button id="splitBtn">Split View</button>
-
-        <div class="speed-control">
-            <button id="decreaseSpeed">-</button>
-            <span id="speedDisplay">1.0x</span>
-            <button id="increaseSpeed">+</button>
+        <div id="contentWrapper">
+            <div id="content" class="content"></div>
         </div>
-    </div>
-
-    <div id="contentWrapper">
-        <div id="content" class="content"></div>
-    </div>
+    </main>
 
     <div id="status" class="status"></div>
 
     <script>
         class Teleprompter {
             constructor() {
-                // Elements
+                this.DEFAULT_DOC_NAME = 'demo-list.txt';
+                this.DEFAULT_DOC_CONTENT = `Welcome to the teleprompter demo.\n\n- Use the Transcript library dropdown to switch between scripts.\n- Upload .txt or .md files to add your own text.\n- Type a docs/ filename and press "Add from docs/" if your manifest is missing.\n- Try mirror or split view when projecting.\n\nUse the play controls below to begin.`;
+
                 this.content = document.getElementById('content');
                 this.contentWrapper = document.getElementById('contentWrapper');
                 this.fileSelect = document.getElementById('fileSelect');
                 this.uploadInput = document.getElementById('uploadInput');
+                this.docsFileName = document.getElementById('docsFileName');
                 this.speedDisplay = document.getElementById('speedDisplay');
                 this.status = document.getElementById('status');
                 this.controls = document.getElementById('controls');
                 this.toggleControlsBtn = document.getElementById('toggleControlsBtn');
                 this.videoBackground = document.getElementById('videoBackground');
                 this.videoUrl = document.getElementById('videoUrl');
+                this.fontSizeControl = document.getElementById('fontSizeControl');
+                this.lineHeightControl = document.getElementById('lineHeightControl');
+                this.widthControl = document.getElementById('widthControl');
 
-                // State
                 this.files = new Map();
                 this.speed = 1.0;
                 this.isPlaying = false;
                 this.isMirrored = false;
                 this.isSplit = false;
                 this.controlsVisible = true;
-                this.scrollInterval = null;
+                this.scrollRaf = null;
                 this.mediaStream = null;
 
-                // Initialize all interactive controls
                 this.initializeControls();
-
-                // Load user transcripts from local storage (if any) 
+                this.restorePreferences();
                 this.loadSavedTranscripts();
-
-                // Attempt to frontload docs/ directory text or md files
                 this.loadDocs();
             }
 
             initializeControls() {
-                // Toggle controls visibility
                 this.toggleControlsBtn.addEventListener('click', () => this.toggleControls());
 
-                // Video controls
                 document.getElementById('cameraBtn').addEventListener('click', () => this.useCamera());
                 document.getElementById('loadVideoBtn').addEventListener('click', () => this.loadVideo());
                 document.getElementById('stopVideoBtn').addEventListener('click', () => this.stopVideo());
 
-                // File handling
                 document.getElementById('uploadBtn').addEventListener('click', () => {
                     this.uploadInput.click();
                 });
@@ -291,22 +384,27 @@
                     input.click();
                 });
 
+                document.getElementById('addDocBtn').addEventListener('click', () => this.loadDocByName());
+                document.getElementById('refreshDocsBtn').addEventListener('click', () => this.loadDocs(true));
+
                 this.fileSelect.addEventListener('change', () => {
                     const content = this.files.get(this.fileSelect.value);
                     if (content) {
-                        this.content.textContent = content;
+                        this.setContent(content);
                         this.updateSplitView();
                     }
                 });
 
-                // Playback controls
                 document.getElementById('playBtn').addEventListener('click', () => this.togglePlay());
                 document.getElementById('mirrorBtn').addEventListener('click', () => this.toggleMirror());
                 document.getElementById('splitBtn').addEventListener('click', () => this.toggleSplit());
                 document.getElementById('decreaseSpeed').addEventListener('click', () => this.adjustSpeed(-0.1));
                 document.getElementById('increaseSpeed').addEventListener('click', () => this.adjustSpeed(0.1));
 
-                // Keyboard shortcuts
+                this.fontSizeControl.addEventListener('input', () => this.updateAppearance());
+                this.lineHeightControl.addEventListener('input', () => this.updateAppearance());
+                this.widthControl.addEventListener('input', () => this.updateAppearance());
+
                 document.addEventListener('keydown', (e) => {
                     if (e.code === 'Space') {
                         e.preventDefault();
@@ -316,7 +414,6 @@
                     } else if (e.code === 'ArrowDown') {
                         this.adjustSpeed(-0.1);
                     } else if (e.code === 'KeyH' || e.code === 'Escape') {
-                        // Press 'H' or 'Escape' to toggle controls
                         this.toggleControls();
                     }
                 });
@@ -326,11 +423,8 @@
                 this.controlsVisible = !this.controlsVisible;
                 this.controls.classList.toggle('hidden', !this.controlsVisible);
                 this.content.classList.toggle('controls-hidden', !this.controlsVisible);
-                
-                // Update button text
                 this.toggleControlsBtn.textContent = this.controlsVisible ? 'Hide Controls' : 'Show Controls';
-                
-                // Also update mirrored content if in split view
+
                 const mirrorContent = document.getElementById('content-mirror');
                 if (mirrorContent) {
                     mirrorContent.classList.toggle('controls-hidden', !this.controlsVisible);
@@ -339,14 +433,9 @@
 
             async useCamera() {
                 try {
-                    // Stop any existing stream first
                     this.stopVideo();
-
-                    // Request user's camera (front-facing by default)
                     this.mediaStream = await navigator.mediaDevices.getUserMedia({
-                        video: { 
-                            facingMode: 'user' // 'user' for front camera, 'environment' for back
-                        },
+                        video: { facingMode: 'user' },
                         audio: false
                     });
 
@@ -366,7 +455,6 @@
                     return;
                 }
 
-                // Stop any existing camera stream
                 if (this.mediaStream) {
                     this.mediaStream.getTracks().forEach(track => track.stop());
                     this.mediaStream = null;
@@ -384,7 +472,6 @@
             }
 
             stopVideo() {
-                // Stop camera stream if active
                 if (this.mediaStream) {
                     this.mediaStream.getTracks().forEach(track => track.stop());
                     this.mediaStream = null;
@@ -397,45 +484,88 @@
                 this.showStatus('Video stopped', 3000);
             }
 
-            async loadDocs() {
+            async loadDocs(forceReload = false) {
+                if (!forceReload && this.loadedDocsOnce) return;
+
+                let loadedCount = 0;
+
                 try {
-                    // Try to fetch the auto-generated list.json
-                    const response = await fetch('docs/list.json');
-                    if (!response.ok) {
-                        console.warn('Could not load docs/list.json - run generate-list script or add files manually');
-                        this.showStatus('No docs/list.json found. Upload files or run generate script.', 5000);
-                        return;
-                    }
+                    const response = await fetch('docs/list.json', { cache: 'no-cache' });
+                    if (response.ok) {
+                        const docFiles = await response.json();
 
-                    const docFiles = await response.json();
-                    let loadedCount = 0;
-                    
-                    for (const fileName of docFiles) {
-                        if (!fileName.endsWith('.txt') && !fileName.endsWith('.md')) continue;
-
-                        const fileUrl = `docs/${fileName}`;
-                        const fileResp = await fetch(fileUrl);
-                        if (!fileResp.ok) {
-                            console.warn(`Could not load file: ${fileUrl}`);
-                            continue;
+                        for (const fileName of docFiles) {
+                            if (!fileName.endsWith('.txt') && !fileName.endsWith('.md')) continue;
+                            const didLoad = await this.loadDocFile(fileName, { silent: true });
+                            if (didLoad) loadedCount++;
                         }
-                        const content = await fileResp.text();
-
-                        this.files.set(fileName, content);
-
-                        const option = document.createElement('option');
-                        option.value = fileName;
-                        option.textContent = fileName;
-                        this.fileSelect.appendChild(option);
-                        loadedCount++;
+                    } else {
+                        this.showStatus('docs/list.json missing. Add docs/ files or refresh.', 4000);
                     }
-
-                    if (loadedCount > 0) {
-                        this.showStatus(`Loaded ${loadedCount} transcript(s) from docs/`, 3000);
-                    }
-
                 } catch (err) {
-                    console.warn('Error loading docs - this is normal if no docs/list.json exists yet');
+                    console.warn('Error loading docs/list.json', err);
+                    this.showStatus('Could not read docs/list.json. Use "Add from docs/" to pull a file.', 4500);
+                }
+
+                if (loadedCount === 0) {
+                    await this.ensureDefaultTranscript();
+                }
+
+                if (loadedCount > 0) {
+                    this.showStatus(`Loaded ${loadedCount} transcript(s) from docs/`, 3000);
+                    this.loadedDocsOnce = true;
+                }
+            }
+
+            async loadDocFile(fileName, { silent = false } = {}) {
+                try {
+                    const fileUrl = `docs/${fileName}`;
+                    const response = await fetch(fileUrl, { cache: 'no-cache' });
+                    if (!response.ok) {
+                        throw new Error(`Missing ${fileUrl}`);
+                    }
+                    const content = await response.text();
+                    this.addTranscript(fileName, content, false);
+                    return true;
+                } catch (err) {
+                    if (!silent) {
+                        this.showStatus(err.message, 4000);
+                        console.error(err);
+                    }
+                    return false;
+                }
+            }
+
+            async ensureDefaultTranscript() {
+                const loaded = await this.loadDocFile(this.DEFAULT_DOC_NAME, { silent: true });
+                if (loaded) {
+                    this.fileSelect.value = this.DEFAULT_DOC_NAME;
+                    this.setContent(this.files.get(this.DEFAULT_DOC_NAME));
+                    this.updateSplitView();
+                    this.loadedDocsOnce = true;
+                    this.showStatus(`Loaded fallback docs/${this.DEFAULT_DOC_NAME}`);
+                    return;
+                }
+
+                if (!this.files.has(this.DEFAULT_DOC_NAME)) {
+                    this.addTranscript(this.DEFAULT_DOC_NAME, this.DEFAULT_DOC_CONTENT, true);
+                    this.showStatus('Added built-in demo transcript');
+                }
+            }
+
+            async loadDocByName() {
+                const fileName = this.docsFileName.value.trim();
+                if (!fileName) {
+                    this.showStatus('Enter a filename in docs/ (e.g. demo-list.txt)', 3000);
+                    return;
+                }
+
+                const didLoad = await this.loadDocFile(fileName);
+                if (didLoad) {
+                    this.fileSelect.value = fileName;
+                    this.setContent(this.files.get(fileName));
+                    this.updateSplitView();
+                    this.showStatus(`Loaded docs/${fileName}`);
                 }
             }
 
@@ -444,29 +574,33 @@
                 reader.onload = (e) => {
                     const fileName = file.name;
                     const content = e.target.result;
-
-                    this.files.set(fileName, content);
-
-                    if (!Array.from(this.fileSelect.options).some(opt => opt.value === fileName)) {
-                        const option = document.createElement('option');
-                        option.value = fileName;
-                        option.textContent = fileName;
-                        this.fileSelect.appendChild(option);
-                    }
-
-                    this.fileSelect.value = fileName;
-                    this.content.textContent = content;
-                    this.updateSplitView();
-                    this.showStatus(`Loaded: ${fileName}`);
+                    this.addTranscript(fileName, content, true);
+                    this.showStatus(`Uploaded ${fileName}`);
                 };
                 reader.readAsText(file);
             }
 
+            addTranscript(fileName, content, selectAfter = false) {
+                this.files.set(fileName, content);
+
+                if (!Array.from(this.fileSelect.options).some(opt => opt.value === fileName)) {
+                    const option = document.createElement('option');
+                    option.value = fileName;
+                    option.textContent = fileName;
+                    this.fileSelect.appendChild(option);
+                }
+
+                if (selectAfter || !this.fileSelect.value) {
+                    this.fileSelect.value = fileName;
+                    this.setContent(content);
+                    this.updateSplitView();
+                }
+
+                this.persistTranscripts();
+            }
+
             saveTranscripts() {
-                const data = Array.from(this.files.entries()).map(([name, content]) => ({
-                    name,
-                    content
-                }));
+                const data = Array.from(this.files.entries()).map(([name, content]) => ({ name, content }));
 
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -488,14 +622,11 @@
                         this.fileSelect.innerHTML = '<option value="">Select transcript or upload...</option>';
 
                         data.forEach(({ name, content }) => {
-                            this.files.set(name, content);
-                            const option = document.createElement('option');
-                            option.value = name;
-                            option.textContent = name;
-                            this.fileSelect.appendChild(option);
+                            this.addTranscript(name, content, false);
                         });
 
                         this.showStatus(`Loaded ${data.length} transcripts`);
+                        this.persistTranscripts();
                     } catch (error) {
                         console.error('Error loading transcripts:', error);
                         this.showStatus('Error loading transcripts file');
@@ -507,14 +638,28 @@
             togglePlay() {
                 this.isPlaying = !this.isPlaying;
                 const playBtn = document.getElementById('playBtn');
-                playBtn.textContent = this.isPlaying ? 'Stop' : 'Start/Stop';
+                playBtn.textContent = this.isPlaying ? 'Pause' : 'Play';
 
                 if (this.isPlaying) {
-                    this.scrollInterval = setInterval(() => {
-                        window.scrollBy(0, this.speed);
-                    }, 20);
+                    this.startScroll();
                 } else {
-                    clearInterval(this.scrollInterval);
+                    this.stopScroll();
+                }
+            }
+
+            startScroll() {
+                const step = () => {
+                    if (!this.isPlaying) return;
+                    window.scrollBy(0, this.speed);
+                    this.scrollRaf = requestAnimationFrame(step);
+                };
+                this.scrollRaf = requestAnimationFrame(step);
+            }
+
+            stopScroll() {
+                if (this.scrollRaf) {
+                    cancelAnimationFrame(this.scrollRaf);
+                    this.scrollRaf = null;
                 }
             }
 
@@ -551,8 +696,40 @@
             }
 
             adjustSpeed(delta) {
-                this.speed = Math.max(0.1, Math.min(5, this.speed + delta));
+                this.speed = Math.max(0.1, Math.min(8, this.speed + delta));
                 this.speedDisplay.textContent = `${this.speed.toFixed(1)}x`;
+                if (this.isPlaying) {
+                    this.stopScroll();
+                    this.startScroll();
+                }
+            }
+
+            setContent(text) {
+                this.content.textContent = text;
+                window.scrollTo({ top: 0 });
+            }
+
+            updateAppearance() {
+                const fontSize = this.fontSizeControl.value;
+                const lineHeight = this.lineHeightControl.value;
+                const width = this.widthControl.value;
+
+                document.getElementById('fontSizeValue').textContent = fontSize;
+                document.getElementById('lineHeightValue').textContent = lineHeight;
+                document.getElementById('widthValue').textContent = width;
+
+                this.content.style.fontSize = `${fontSize}px`;
+                this.content.style.lineHeight = lineHeight;
+                this.content.style.maxWidth = `${width}px`;
+
+                const mirrorContent = document.getElementById('content-mirror');
+                if (mirrorContent) {
+                    mirrorContent.style.fontSize = `${fontSize}px`;
+                    mirrorContent.style.lineHeight = lineHeight;
+                    mirrorContent.style.maxWidth = `${width}px`;
+                }
+
+                this.persistPreferences();
             }
 
             showStatus(message, duration = 3000) {
@@ -563,8 +740,47 @@
                 }, duration);
             }
 
+            persistTranscripts() {
+                const data = Array.from(this.files.entries()).map(([name, content]) => ({ name, content }));
+                localStorage.setItem('teleprompter_transcripts', JSON.stringify(data));
+            }
+
             loadSavedTranscripts() {
-                // Placeholder for loading from localStorage if needed
+                try {
+                    const saved = localStorage.getItem('teleprompter_transcripts');
+                    if (!saved) return;
+                    const data = JSON.parse(saved);
+                    data.forEach(({ name, content }) => this.addTranscript(name, content, false));
+                    this.showStatus(`Restored ${data.length} transcript(s)`);
+                } catch (err) {
+                    console.warn('No saved transcripts found', err);
+                }
+            }
+
+            persistPreferences() {
+                const prefs = {
+                    fontSize: this.fontSizeControl.value,
+                    lineHeight: this.lineHeightControl.value,
+                    width: this.widthControl.value,
+                    speed: this.speed
+                };
+                localStorage.setItem('teleprompter_prefs', JSON.stringify(prefs));
+            }
+
+            restorePreferences() {
+                try {
+                    const saved = localStorage.getItem('teleprompter_prefs');
+                    if (!saved) return;
+                    const prefs = JSON.parse(saved);
+                    this.fontSizeControl.value = prefs.fontSize || this.fontSizeControl.value;
+                    this.lineHeightControl.value = prefs.lineHeight || this.lineHeightControl.value;
+                    this.widthControl.value = prefs.width || this.widthControl.value;
+                    this.speed = prefs.speed || this.speed;
+                    this.speedDisplay.textContent = `${this.speed.toFixed(1)}x`;
+                    this.updateAppearance();
+                } catch (err) {
+                    console.warn('No saved preferences found', err);
+                }
             }
         }
 
