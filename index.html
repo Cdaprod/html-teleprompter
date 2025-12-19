@@ -139,6 +139,39 @@
             border-color: var(--accent);
         }
 
+        .collapsed-controls {
+            position: fixed;
+            right: 14px;
+            bottom: 20px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(12px) saturate(120%);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(12px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 102;
+        }
+
+        .collapsed-controls.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .collapsed-controls .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+        }
+
         @media (max-width: 768px) {
             .controls {
                 padding: 12px;
@@ -252,6 +285,11 @@
 
     <button id="toggleControlsBtn">Hide Controls</button>
 
+    <div id="collapsedControls" class="collapsed-controls" aria-hidden="true">
+        <span class="label">Quick control</span>
+        <button id="collapsedPlayBtn">Play</button>
+    </div>
+
     <main>
         <div class="controls" id="controls">
             <div class="control-group">
@@ -335,6 +373,8 @@
                 this.status = document.getElementById('status');
                 this.controls = document.getElementById('controls');
                 this.toggleControlsBtn = document.getElementById('toggleControlsBtn');
+                this.collapsedControls = document.getElementById('collapsedControls');
+                this.collapsedPlayBtn = document.getElementById('collapsedPlayBtn');
                 this.videoBackground = document.getElementById('videoBackground');
                 this.videoUrl = document.getElementById('videoUrl');
                 this.fontSizeControl = document.getElementById('fontSizeControl');
@@ -358,6 +398,7 @@
 
             initializeControls() {
                 this.toggleControlsBtn.addEventListener('click', () => this.toggleControls());
+                this.collapsedPlayBtn.addEventListener('click', () => this.togglePlay());
 
                 document.getElementById('cameraBtn').addEventListener('click', () => this.useCamera());
                 document.getElementById('loadVideoBtn').addEventListener('click', () => this.loadVideo());
@@ -424,6 +465,8 @@
                 this.controls.classList.toggle('hidden', !this.controlsVisible);
                 this.content.classList.toggle('controls-hidden', !this.controlsVisible);
                 this.toggleControlsBtn.textContent = this.controlsVisible ? 'Hide Controls' : 'Show Controls';
+                this.collapsedControls.classList.toggle('visible', !this.controlsVisible);
+                this.collapsedControls.setAttribute('aria-hidden', this.controlsVisible ? 'true' : 'false');
 
                 const mirrorContent = document.getElementById('content-mirror');
                 if (mirrorContent) {
@@ -637,14 +680,20 @@
 
             togglePlay() {
                 this.isPlaying = !this.isPlaying;
-                const playBtn = document.getElementById('playBtn');
-                playBtn.textContent = this.isPlaying ? 'Pause' : 'Play';
+                this.updatePlayButtons();
 
                 if (this.isPlaying) {
                     this.startScroll();
                 } else {
                     this.stopScroll();
                 }
+            }
+
+            updatePlayButtons() {
+                const playBtn = document.getElementById('playBtn');
+                const label = this.isPlaying ? 'Pause' : 'Play';
+                playBtn.textContent = label;
+                this.collapsedPlayBtn.textContent = label;
             }
 
             startScroll() {
