@@ -22,12 +22,17 @@ try {
   const defaultDocPath = path.join(__dirname, '..', 'docs', defaultDocName);
 
   // HTML surface sanity checks
-  ['fileSelect', 'content', 'docsFileName', 'addDocBtn', 'playBtn', 'collapsedPlayBtn'].forEach((id) => {
+  ['controlToggleCluster', 'fileSelect', 'content', 'docsFileName', 'addDocBtn', 'playBtn', 'collapsedPlayBtn'].forEach((id) => {
     assert(
       indexHtml.includes(`id="${id}"`),
       `Expected teleprompter UI element with id="${id}" in index.html`
     );
   });
+
+  assert(
+    indexHtml.indexOf('id="collapsedControls"') < indexHtml.indexOf('id="toggleControlsBtn"'),
+    'Collapsed quick controls should render to the left of the show/hide button for aligned toggles'
+  );
 
   assert(
     indexHtml.includes('DEFAULT_DOC_CONTENT'),
