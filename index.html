@@ -68,6 +68,13 @@
         .controls.hidden {
             transform: translateY(-100%);
             box-shadow: none;
+            height: 0;
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-bottom: 0;
+            overflow: hidden;
+            pointer-events: none;
         }
 
         .control-group {
@@ -142,7 +149,7 @@
         .collapsed-controls {
             position: fixed;
             right: 14px;
-            bottom: 20px;
+            top: 64px;
             display: flex;
             gap: 8px;
             align-items: center;
@@ -154,7 +161,7 @@
             backdrop-filter: blur(12px) saturate(120%);
             opacity: 0;
             pointer-events: none;
-            transform: translateY(12px);
+            transform: translateY(-10px);
             transition: opacity 0.25s ease, transform 0.25s ease;
             z-index: 102;
         }
