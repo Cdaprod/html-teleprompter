@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davids Teleprompter</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        #videoBackground {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #videoBackground.active {
+            opacity: 1;
+        }
+
+        .controls {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(45, 45, 45, 0.95);
+            padding: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid #404040;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .controls.hidden {
+            transform: translateY(-100%);
+        }
+
+        .controls > * {
+            margin: 2px;
+            flex-shrink: 0;
+        }
+
+        select, button {
+            background: #404040;
+            color: white;
+            border: 1px solid #505050;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        select:hover, button:hover {
+            background: #505050;
+            border-color: #606060;
+        }
+
+        #fileSelect {
+            min-width: 150px;
+            max-width: 300px;
+            flex: 1;
+        }
+
+        /* Toggle button that stays visible */
+        #toggleControlsBtn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 101;
+            background: rgba(64, 64, 64, 0.9);
+            color: white;
+            border: 1px solid #505050;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0.7;
+        }
+
+        #toggleControlsBtn:hover {
+            opacity: 1;
+            background: #505050;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                padding: 8px;
+            }
+
+            .file-controls {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+
+            #fileSelect {
+                width: 100%;
+                min-width: 100%;
+            }
+        }
+
+        .content {
+            margin-top: 60px;
+            white-space: pre-wrap;
+            font-size: 24px;
+            line-height: 1.5;
+            padding: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: margin-top 0.3s ease;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 1;
+        }
+
+        .content.controls-hidden {
+            margin-top: 20px;
+        }
+
+        .mirror {
+            transform: scaleX(-1);
+        }
+
+        .split-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1600px;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .file-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        #uploadInput {
+            display: none;
+        }
+
+        .status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #404040;
+            padding: 10px 20px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .status.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <video id="videoBackground" autoplay muted playsinline></video>
+    
+    <button id="toggleControlsBtn">Hide Controls</button>
+
+    <div class="controls" id="controls">
+        <div class="file-controls">
+            <button id="cameraBtn">Use Camera</button>
+            <input type="text" id="videoUrl" placeholder="Or enter stream URL (http://192.168.1.100:8080/video)" 
+                   style="min-width: 300px; background: #404040; color: white; border: 1px solid #505050; padding: 8px 12px; border-radius: 4px;">
+            <button id="loadVideoBtn">Load Stream</button>
+            <button id="stopVideoBtn">Stop Video</button>
+        </div>
+        
+        <div class="file-controls">
+            <select id="fileSelect">
+                <option value="">Select transcript or upload...</option>
+            </select>
+            <input type="file" id="uploadInput" accept=".md,.txt" multiple>
+            <button id="uploadBtn">Upload MD File</button>
+            <button id="saveStorageBtn">Save Transcripts</button>
+            <button id="loadStorageBtn">Load Transcripts</button>
+        </div>
+
+        <button id="playBtn">Start/Stop</button>
+        <button id="mirrorBtn">Mirror</button>
+        <button id="splitBtn">Split View</button>
+
+        <div class="speed-control">
+            <button id="decreaseSpeed">-</button>
+            <span id="speedDisplay">1.0x</span>
+            <button id="increaseSpeed">+</button>
+        </div>
+    </div>
+
+    <div id="contentWrapper">
+        <div id="content" class="content"></div>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <script>
+        class Teleprompter {
+            constructor() {
+                // Elements
+                this.content = document.getElementById('content');
+                this.contentWrapper = document.getElementById('contentWrapper');
+                this.fileSelect = document.getElementById('fileSelect');
+                this.uploadInput = document.getElementById('uploadInput');
+                this.speedDisplay = document.getElementById('speedDisplay');
+                this.status = document.getElementById('status');
+                this.controls = document.getElementById('controls');
+                this.toggleControlsBtn = document.getElementById('toggleControlsBtn');
+                this.videoBackground = document.getElementById('videoBackground');
+                this.videoUrl = document.getElementById('videoUrl');
+
+                // State
+                this.files = new Map();
+                this.speed = 1.0;
+                this.isPlaying = false;
+                this.isMirrored = false;
+                this.isSplit = false;
+                this.controlsVisible = true;
+                this.scrollInterval = null;
+                this.mediaStream = null;
+
+                // Initialize all interactive controls
+                this.initializeControls();
+
+                // Load user transcripts from local storage (if any) 
+                this.loadSavedTranscripts();
+
+                // Attempt to frontload docs/ directory text or md files
+                this.loadDocs();
+            }
+
+            initializeControls() {
+                // Toggle controls visibility
+                this.toggleControlsBtn.addEventListener('click', () => this.toggleControls());
+
+                // Video controls
+                document.getElementById('cameraBtn').addEventListener('click', () => this.useCamera());
+                document.getElementById('loadVideoBtn').addEventListener('click', () => this.loadVideo());
+                document.getElementById('stopVideoBtn').addEventListener('click', () => this.stopVideo());
+
+                // File handling
+                document.getElementById('uploadBtn').addEventListener('click', () => {
+                    this.uploadInput.click();
+                });
+
+                this.uploadInput.addEventListener('change', (e) => {
+                    Array.from(e.target.files).forEach(file => this.handleFileUpload(file));
+                    this.uploadInput.value = '';
+                });
+
+                document.getElementById('saveStorageBtn').addEventListener('click', () => {
+                    this.saveTranscripts();
+                });
+
+                document.getElementById('loadStorageBtn').addEventListener('click', () => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.json';
+                    input.onchange = (e) => this.loadTranscriptsFile(e.target.files[0]);
+                    input.click();
+                });
+
+                this.fileSelect.addEventListener('change', () => {
+                    const content = this.files.get(this.fileSelect.value);
+                    if (content) {
+                        this.content.textContent = content;
+                        this.updateSplitView();
+                    }
+                });
+
+                // Playback controls
+                document.getElementById('playBtn').addEventListener('click', () => this.togglePlay());
+                document.getElementById('mirrorBtn').addEventListener('click', () => this.toggleMirror());
+                document.getElementById('splitBtn').addEventListener('click', () => this.toggleSplit());
+                document.getElementById('decreaseSpeed').addEventListener('click', () => this.adjustSpeed(-0.1));
+                document.getElementById('increaseSpeed').addEventListener('click', () => this.adjustSpeed(0.1));
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        this.togglePlay();
+                    } else if (e.code === 'ArrowUp') {
+                        this.adjustSpeed(0.1);
+                    } else if (e.code === 'ArrowDown') {
+                        this.adjustSpeed(-0.1);
+                    } else if (e.code === 'KeyH' || e.code === 'Escape') {
+                        // Press 'H' or 'Escape' to toggle controls
+                        this.toggleControls();
+                    }
+                });
+            }
+
+            toggleControls() {
+                this.controlsVisible = !this.controlsVisible;
+                this.controls.classList.toggle('hidden', !this.controlsVisible);
+                this.content.classList.toggle('controls-hidden', !this.controlsVisible);
+                
+                // Update button text
+                this.toggleControlsBtn.textContent = this.controlsVisible ? 'Hide Controls' : 'Show Controls';
+                
+                // Also update mirrored content if in split view
+                const mirrorContent = document.getElementById('content-mirror');
+                if (mirrorContent) {
+                    mirrorContent.classList.toggle('controls-hidden', !this.controlsVisible);
+                }
+            }
+
+            async useCamera() {
+                try {
+                    // Stop any existing stream first
+                    this.stopVideo();
+
+                    // Request user's camera (front-facing by default)
+                    this.mediaStream = await navigator.mediaDevices.getUserMedia({
+                        video: { 
+                            facingMode: 'user' // 'user' for front camera, 'environment' for back
+                        },
+                        audio: false
+                    });
+
+                    this.videoBackground.srcObject = this.mediaStream;
+                    this.videoBackground.classList.add('active');
+                    this.showStatus('Camera activated', 3000);
+                } catch (err) {
+                    this.showStatus('Error accessing camera: ' + err.message, 5000);
+                    console.error('Camera access error:', err);
+                }
+            }
+
+            loadVideo() {
+                const url = this.videoUrl.value.trim();
+                if (!url) {
+                    this.showStatus('Please enter a video stream URL', 3000);
+                    return;
+                }
+
+                // Stop any existing camera stream
+                if (this.mediaStream) {
+                    this.mediaStream.getTracks().forEach(track => track.stop());
+                    this.mediaStream = null;
+                }
+
+                this.videoBackground.srcObject = null;
+                this.videoBackground.src = url;
+                this.videoBackground.classList.add('active');
+                this.videoBackground.play().then(() => {
+                    this.showStatus('Video stream loaded', 3000);
+                }).catch(err => {
+                    this.showStatus('Error loading video stream: ' + err.message, 5000);
+                    console.error('Video load error:', err);
+                });
+            }
+
+            stopVideo() {
+                // Stop camera stream if active
+                if (this.mediaStream) {
+                    this.mediaStream.getTracks().forEach(track => track.stop());
+                    this.mediaStream = null;
+                }
+
+                this.videoBackground.pause();
+                this.videoBackground.srcObject = null;
+                this.videoBackground.src = '';
+                this.videoBackground.classList.remove('active');
+                this.showStatus('Video stopped', 3000);
+            }
+
+            async loadDocs() {
+                try {
+                    // Try to fetch the auto-generated list.json
+                    const response = await fetch('docs/list.json');
+                    if (!response.ok) {
+                        console.warn('Could not load docs/list.json - run generate-list script or add files manually');
+                        this.showStatus('No docs/list.json found. Upload files or run generate script.', 5000);
+                        return;
+                    }
+
+                    const docFiles = await response.json();
+                    let loadedCount = 0;
+                    
+                    for (const fileName of docFiles) {
+                        if (!fileName.endsWith('.txt') && !fileName.endsWith('.md')) continue;
+
+                        const fileUrl = `docs/${fileName}`;
+                        const fileResp = await fetch(fileUrl);
+                        if (!fileResp.ok) {
+                            console.warn(`Could not load file: ${fileUrl}`);
+                            continue;
+                        }
+                        const content = await fileResp.text();
+
+                        this.files.set(fileName, content);
+
+                        const option = document.createElement('option');
+                        option.value = fileName;
+                        option.textContent = fileName;
+                        this.fileSelect.appendChild(option);
+                        loadedCount++;
+                    }
+
+                    if (loadedCount > 0) {
+                        this.showStatus(`Loaded ${loadedCount} transcript(s) from docs/`, 3000);
+                    }
+
+                } catch (err) {
+                    console.warn('Error loading docs - this is normal if no docs/list.json exists yet');
+                }
+            }
+
+            handleFileUpload(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const fileName = file.name;
+                    const content = e.target.result;
+
+                    this.files.set(fileName, content);
+
+                    if (!Array.from(this.fileSelect.options).some(opt => opt.value === fileName)) {
+                        const option = document.createElement('option');
+                        option.value = fileName;
+                        option.textContent = fileName;
+                        this.fileSelect.appendChild(option);
+                    }
+
+                    this.fileSelect.value = fileName;
+                    this.content.textContent = content;
+                    this.updateSplitView();
+                    this.showStatus(`Loaded: ${fileName}`);
+                };
+                reader.readAsText(file);
+            }
+
+            saveTranscripts() {
+                const data = Array.from(this.files.entries()).map(([name, content]) => ({
+                    name,
+                    content
+                }));
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'transcripts.json';
+                a.click();
+                URL.revokeObjectURL(url);
+
+                this.showStatus('Transcripts saved to transcripts.json');
+            }
+
+            loadTranscriptsFile(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        this.files.clear();
+                        this.fileSelect.innerHTML = '<option value="">Select transcript or upload...</option>';
+
+                        data.forEach(({ name, content }) => {
+                            this.files.set(name, content);
+                            const option = document.createElement('option');
+                            option.value = name;
+                            option.textContent = name;
+                            this.fileSelect.appendChild(option);
+                        });
+
+                        this.showStatus(`Loaded ${data.length} transcripts`);
+                    } catch (error) {
+                        console.error('Error loading transcripts:', error);
+                        this.showStatus('Error loading transcripts file');
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            togglePlay() {
+                this.isPlaying = !this.isPlaying;
+                const playBtn = document.getElementById('playBtn');
+                playBtn.textContent = this.isPlaying ? 'Stop' : 'Start/Stop';
+
+                if (this.isPlaying) {
+                    this.scrollInterval = setInterval(() => {
+                        window.scrollBy(0, this.speed);
+                    }, 20);
+                } else {
+                    clearInterval(this.scrollInterval);
+                }
+            }
+
+            toggleMirror() {
+                this.isMirrored = !this.isMirrored;
+                this.content.classList.toggle('mirror', this.isMirrored);
+
+                const mirrorContent = document.getElementById('content-mirror');
+                if (mirrorContent) {
+                    mirrorContent.classList.toggle('mirror', !this.isMirrored);
+                }
+            }
+
+            toggleSplit() {
+                this.isSplit = !this.isSplit;
+                this.contentWrapper.classList.toggle('split-view', this.isSplit);
+                this.updateSplitView();
+            }
+
+            updateSplitView() {
+                const mirrorContent = document.getElementById('content-mirror');
+                if (this.isSplit) {
+                    if (!mirrorContent) {
+                        const mirror = this.content.cloneNode(true);
+                        mirror.id = 'content-mirror';
+                        mirror.classList.add('mirror');
+                        this.contentWrapper.appendChild(mirror);
+                    } else {
+                        mirrorContent.textContent = this.content.textContent;
+                    }
+                } else if (mirrorContent) {
+                    mirrorContent.remove();
+                }
+            }
+
+            adjustSpeed(delta) {
+                this.speed = Math.max(0.1, Math.min(5, this.speed + delta));
+                this.speedDisplay.textContent = `${this.speed.toFixed(1)}x`;
+            }
+
+            showStatus(message, duration = 3000) {
+                this.status.textContent = message;
+                this.status.classList.add('show');
+                setTimeout(() => {
+                    this.status.classList.remove('show');
+                }, duration);
+            }
+
+            loadSavedTranscripts() {
+                // Placeholder for loading from localStorage if needed
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new Teleprompter();
+        });
+    </script>
+</body>
+</html>
