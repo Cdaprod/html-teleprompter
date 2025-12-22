@@ -15,14 +15,25 @@ function readProjectFile(relativePath) {
 }
 
 try {
-  const indexHtml = readProjectFile('index.html');
-  const manifestRaw = readProjectFile('docs/list.json');
+  const indexHtml = readProjectFile('public/index.html');
+  const manifestRaw = readProjectFile('public/docs/list.json');
   const manifest = JSON.parse(manifestRaw);
   const defaultDocName = 'demo-list.txt';
-  const defaultDocPath = path.join(__dirname, '..', 'docs', defaultDocName);
+  const defaultDocPath = path.join(__dirname, '..', 'public', 'docs', defaultDocName);
 
   // HTML surface sanity checks
-  ['controlToggleCluster', 'fileSelect', 'content', 'docsFileName', 'addDocBtn', 'playBtn', 'collapsedPlayBtn'].forEach((id) => {
+  [
+    'controlToggleCluster',
+    'fileSelect',
+    'content',
+    'docsFileName',
+    'addDocBtn',
+    'playBtn',
+    'collapsedPlayBtn',
+    'projectSelect',
+    'projectScriptSelect',
+    'saveProjectScriptBtn',
+  ].forEach((id) => {
     assert(
       indexHtml.includes(`id="${id}"`),
       `Expected teleprompter UI element with id="${id}" in index.html`

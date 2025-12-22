@@ -1,0 +1,17 @@
+services:
+  teleprompter:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: sh -c "uvicorn app.main:app --host ${TELEPROMPTER_HOST:-0.0.0.0} --port ${TELEPROMPTER_PORT:-8790} --reload"
+    environment:
+      TELEPROMPTER_PROJECTS_ROOT: ${TELEPROMPTER_PROJECTS_ROOT:-/data/projects}
+      TELEPROMPTER_HOST: ${TELEPROMPTER_HOST:-0.0.0.0}
+      TELEPROMPTER_PORT: ${TELEPROMPTER_PORT:-8790}
+      TELEPROMPTER_CORS_ORIGINS: ${TELEPROMPTER_CORS_ORIGINS:-*}
+    volumes:
+      - ..:/app
+      - ${PROJECTS_PATH:-./projects}:/data/projects
+    ports:
+      - "8790:8790"
+    restart: unless-stopped
