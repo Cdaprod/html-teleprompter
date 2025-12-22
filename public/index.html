@@ -338,6 +338,28 @@
                 </div>
             </div>
 
+            <div class="control-group" style="grid-column: span 2;">
+                <div class="input-stack" style="width: 100%;">
+                    <span class="control-title">Project workspace</span>
+                    <div class="control-group" style="width: 100%;">
+                        <select id="projectSelect">
+                            <option value="">Select project...</option>
+                        </select>
+                        <input type="text" id="projectNameInput" placeholder="New project name" style="flex: 1; min-width: 180px;">
+                        <button id="createProjectBtn">Create project</button>
+                        <button id="refreshProjectsBtn" class="ghost-btn">Refresh projects</button>
+                    </div>
+                    <div class="control-group" style="width: 100%;">
+                        <select id="projectScriptSelect">
+                            <option value="">Project scripts...</option>
+                        </select>
+                        <input type="text" id="projectScriptTitle" placeholder="Script title (optional)" style="flex: 1; min-width: 160px;">
+                        <button id="loadProjectScriptBtn">Load selected</button>
+                        <button id="saveProjectScriptBtn">Save current to project</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="control-group" style="flex-wrap: nowrap; gap: 10px;">
                 <button id="playBtn">Play</button>
                 <button id="mirrorBtn">Mirror</button>
@@ -394,6 +416,10 @@
                 this.fontSizeControl = document.getElementById('fontSizeControl');
                 this.lineHeightControl = document.getElementById('lineHeightControl');
                 this.widthControl = document.getElementById('widthControl');
+                this.projectSelect = document.getElementById('projectSelect');
+                this.projectNameInput = document.getElementById('projectNameInput');
+                this.projectScriptSelect = document.getElementById('projectScriptSelect');
+                this.projectScriptTitle = document.getElementById('projectScriptTitle');
 
                 this.files = new Map();
                 this.speed = 1.0;
@@ -408,6 +434,7 @@
                 this.restorePreferences();
                 this.loadSavedTranscripts();
                 this.loadDocs();
+                this.loadProjects();
             }
 
             initializeControls() {
@@ -441,6 +468,20 @@
 
                 document.getElementById('addDocBtn').addEventListener('click', () => this.loadDocByName());
                 document.getElementById('refreshDocsBtn').addEventListener('click', () => this.loadDocs(true));
+
+                document.getElementById('createProjectBtn').addEventListener('click', () => this.createProject());
+                document.getElementById('refreshProjectsBtn').addEventListener('click', () => this.loadProjects(true));
+                this.projectSelect.addEventListener('change', () => {
+                    const project = this.projectSelect.value;
+                    this.projectScriptSelect.value = '';
+                    if (project) {
+                        this.loadProjectScripts(project);
+                    } else {
+                        this.projectScriptSelect.innerHTML = '<option value="">Project scripts...</option>';
+                    }
+                });
+                document.getElementById('loadProjectScriptBtn').addEventListener('click', () => this.loadSelectedProjectScript());
+                document.getElementById('saveProjectScriptBtn').addEventListener('click', () => this.saveCurrentToProject());
 
                 this.fileSelect.addEventListener('change', () => {
                     const content = this.files.get(this.fileSelect.value);
@@ -624,6 +665,151 @@
                     this.updateSplitView();
                     this.showStatus(`Loaded docs/${fileName}`);
                 }
+            }
+
+            async loadProjects(forceReload = false) {
+                if (this.loadingProjects && !forceReload) return;
+                this.loadingProjects = true;
+
+                try {
+                    const response = await fetch('/api/projects', { cache: 'no-cache' });
+                    if (!response.ok) throw new Error('Unable to fetch projects');
+                    const data = await response.json();
+                    this.updateProjectSelect(data.projects || []);
+
+                    if (this.projectSelect.value && data.projects.includes(this.projectSelect.value)) {
+                        await this.loadProjectScripts(this.projectSelect.value);
+                    }
+                } catch (err) {
+                    console.warn('Project load error', err);
+                    this.showStatus('Could not load projects from the workspace API', 4000);
+                } finally {
+                    this.loadingProjects = false;
+                }
+            }
+
+            updateProjectSelect(projects) {
+                this.projectSelect.innerHTML = '<option value="">Select project...</option>';
+                projects.forEach((project) => {
+                    const option = document.createElement('option');
+                    option.value = project;
+                    option.textContent = project;
+                    this.projectSelect.appendChild(option);
+                });
+
+                if (!this.projectSelect.value && projects.length) {
+                    this.projectSelect.value = projects[0];
+                    this.loadProjectScripts(projects[0]);
+                }
+            }
+
+            async createProject() {
+                const name = this.projectNameInput.value.trim();
+                if (!name) {
+                    this.showStatus('Provide a project name before creating one');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/projects', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name })
+                    });
+                    if (!response.ok) throw new Error('Project create failed');
+
+                    this.showStatus(`Project ${name} ready`);
+                    this.projectNameInput.value = '';
+                    await this.loadProjects(true);
+                    this.projectSelect.value = name;
+                    await this.loadProjectScripts(name);
+                } catch (err) {
+                    console.error(err);
+                    this.showStatus('Could not create project');
+                }
+            }
+
+            async loadProjectScripts(project) {
+                try {
+                    const response = await fetch(`/api/projects/${encodeURIComponent(project)}/scripts`, { cache: 'no-cache' });
+                    if (!response.ok) throw new Error('Project scripts unavailable');
+                    const data = await response.json();
+                    this.projectScriptSelect.innerHTML = '<option value="">Project scripts...</option>';
+                    (data.scripts || []).forEach((script) => {
+                        const option = document.createElement('option');
+                        option.value = script;
+                        option.textContent = script;
+                        this.projectScriptSelect.appendChild(option);
+                    });
+                } catch (err) {
+                    console.warn('Script load error', err);
+                    this.showStatus('Unable to list scripts for project');
+                }
+            }
+
+            async loadSelectedProjectScript() {
+                const project = this.getSelectedProject();
+                const scriptName = this.projectScriptSelect.value;
+
+                if (!project) {
+                    this.showStatus('Select a project first');
+                    return;
+                }
+
+                if (!scriptName) {
+                    this.showStatus('Choose a project script to load');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/projects/${encodeURIComponent(project)}/scripts/${encodeURIComponent(scriptName)}`);
+                    if (!response.ok) throw new Error('Unable to fetch project script');
+                    const data = await response.json();
+                    const displayName = `${project}/${scriptName}`;
+                    this.addTranscript(displayName, data.content, true);
+                    this.projectScriptTitle.value = scriptName;
+                    this.showStatus(`Loaded ${scriptName} from ${project}`);
+                } catch (err) {
+                    console.error('Project script fetch failed', err);
+                    this.showStatus('Unable to load the selected project script');
+                }
+            }
+
+            async saveCurrentToProject() {
+                const project = this.getSelectedProject();
+                if (!project) {
+                    this.showStatus('Select a project before saving');
+                    return;
+                }
+
+                const content = this.content.textContent || '';
+                if (!content.trim()) {
+                    this.showStatus('Nothing to save yet');
+                    return;
+                }
+
+                const title = this.projectScriptTitle.value.trim() || this.fileSelect.value || 'teleprompter-script';
+
+                try {
+                    const response = await fetch(`/api/projects/${encodeURIComponent(project)}/scripts`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, content, format: 'md' })
+                    });
+
+                    if (!response.ok) throw new Error('Save failed');
+                    const data = await response.json();
+                    await this.loadProjectScripts(project);
+                    this.projectScriptSelect.value = data.name;
+                    this.showStatus(`Saved ${data.name} to ${project}`);
+                } catch (err) {
+                    console.error('Save to project failed', err);
+                    this.showStatus('Unable to save script to project');
+                }
+            }
+
+            getSelectedProject() {
+                return this.projectSelect.value;
             }
 
             handleFileUpload(file) {
