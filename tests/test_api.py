@@ -54,7 +54,9 @@ def test_project_script_and_export(tmp_path):
     }
     run_resp = client.post("/api/projects/demo/runs", json=run_payload)
     assert run_resp.status_code == 200
-    assert Path(run_resp.json()["path"]).exists()
+    run_path = Path(run_resp.json()["path"])
+    assert run_path.exists()
+    assert run_path.suffix == ".json"
 
     projects = client.get("/api/projects").json()["projects"]
     assert "demo" in projects

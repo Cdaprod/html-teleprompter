@@ -49,6 +49,14 @@ try {
     indexHtml.includes('DEFAULT_DOC_CONTENT'),
     'Fallback inline demo transcript must be present for preview reliability'
   );
+  assert(
+    indexHtml.includes('shouldPersistSource'),
+    'Teleprompter should guard which transcript sources persist to local storage'
+  );
+  assert(
+    indexHtml.includes('normalizeSource'),
+    'Teleprompter should normalize transcript sources when loading saved data'
+  );
 
   // Manifest and docs directory checks
   assert(Array.isArray(manifest), 'docs/list.json must be a JSON array');
