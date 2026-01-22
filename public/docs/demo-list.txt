@@ -1,331 +1,137 @@
-#A
-I have questions to underscore
-[PAUSE=200]
+OPENING SCENE (OBSBOT TINY 2 -- OVERHEAD, CAMERA VISIBLE IN FRAME):
 
-How do I get a copy of local police **policy**
-[PAUSE=140]
-What search terms did I miss in my records request
-[PAUSE=140]
-What sub departments were and were not **queried**
-[PAUSE=140]
-Does the policy say **AGGRESSIVE** like the side of the cop cars do
-[PAUSE=140]
-Does it reflect enforcement of constitutional **rights**
-[PAUSE=140]
-Why is my response padded with **fluff**
-[PAUSE=140]
-Why are encounters with Paulding County Sheriff’s Office missing **details**
-[PAUSE=140]
-Why are stops from traffic encounters missing **records**
-[HOLD=520]
+(Overhead shot. You can see the OBSBOT Tiny 2 itself, mounted on the arm. You reach up, grab a cable hanging on the wall, and start wiring it in as you talk.)
 
-#default
-I shouldn’t need dates if I am requesting any and **all**
-[PAUSE=220]
-I know of detailed information I am requesting
-[PAUSE=180]
-You can’t tell me it doesn’t exist
-[PAUSE=160]
-When detectives had to follow leads to find me
-[PAUSE=220]
-Just for no charges to be **filed**
-[HOLD=480]
+So what you’re looking at right now…  
+is actually the overhead camera.
 
-#B
-So I’ll document it from memory
-[PAUSE=180]
-Thirteen years ago or not
-[PAUSE=200]
-Bet
-[PAUSE=140]
-Game on
-[PAUSE=180]
-I’ll start **here**
-[HOLD=520]
+This little camera right here -- this is an OBSBOT Tiny 2.  
+It’s mounted above my desk, looking straight down at the workspace.
 
-#A
-I’m here because I couldn’t ignore **this**
-[PAUSE=240]
-Because my name is attached to **it**
-[HOLD=360]
+And yeah, I know -- it’s kind of funny that you’re watching a camera  
+from another camera.
 
-#default
-I used to do things just because I **could**
-[PAUSE=220]
-I learned what that **costs**
-[HOLD=420]
+(Beat. Plug the cable in.)
 
-#C
-The best rulers are those who have no desire to **rule**
-[PAUSE=180]
-Plato
-[HOLD=420]
+But for what I’m doing, this thing is honestly perfect.
 
-#default
-Nothing here is a **test**
-[PAUSE=200]
-It’s just something I couldn’t ignore
-[HOLD=360]
+All I really need here is access to a sensor.  
+A reliable sensor.  
+Something that can see the workspace, track movement, and just work.
 
-I document what I experience for the **record**
-[HOLD=420]
+I don’t need cinema glass for this angle.  
+I don’t need shallow depth of field.  
+I need coverage.
 
-#A
-What makes someone reach for **authority** when it isn’t needed
-[PAUSE=260]
-Apparently suspicion
-[PAUSE=240]
-And that’s the part I can’t let **slide** because suspicion isn’t a reason
-[HOLD=420]
+And for that, this is actually a really solid piece of hardware.
 
-Once authority is applied it doesn’t disappear when the moment passes
-[PAUSE=220]
-It **follows**
-[HOLD=380]
+It gives me a clean overhead view,  
+it stays out of the way,  
+and it lets me focus on the actual work instead of babysitting the camera.
 
-#default
-Even before my redemption arc before I knew the ins and outs of the law
-[PAUSE=260]
-I was subjugated to illegal **seizures** that led to trumped up charges
-[PAUSE=260]
-They were power plays by people who didn’t see me as a **person**
-[HOLD=420]
+So when you see this angle later on in the video,  
+this is what it is --  
+it’s the procedural view.  
+It’s here to show you exactly what I’m doing, step by step.
 
-But this isn’t about that
-[PAUSE=200]
-The times I was incarcerated I knew the ends didn’t justify the means
-[PAUSE=240]
-It was just an opportunity to get this guy off the **streets**
-[HOLD=360]
+(Beat. Hands come back into frame.)
 
-Shake down
-[PAUSE=140]
-Lock up
-[HOLD=320]
+Now… when it comes to projects,  
+anyone in their right mind could look at my schedule and say…
 
-#A
-You know when people say you should write a **book**
-[PAUSE=240]
-Well this isn’t that
-[HOLD=360]
+"What the hell is this guy doing?"
 
-This is me making a short **documentary**
-[PAUSE=220]
-Because I went and pulled my public **record**
-[PAUSE=240]
-And apparently nobody’s written it **yet**
-[HOLD=420]
+And honestly -- that reaction makes sense  
+if you don’t see the system behind it.
 
-#B
-What becomes **unconstitutional** when authority is applied without **purpose**
-[HOLD=520]
+MAIN TRANSCRIPT:
 
-#default
-My name is **David**
-[PAUSE=200]
+But there is a systematic approach to what I’m doing.
 
-I’ve been rebuilding my life for more than ten **years**
-[PAUSE=260]
-Not because the system fixed me but because I stopped chasing a fix and started fixing **myself**
-[HOLD=420]
+The long-term goal is simple:
+I want to make a cinematic documentary.
 
-I don’t owe my redemption to the criminal justice **system**
-[PAUSE=220]
-I owe it to my **triplets**
-[HOLD=480]
+But you don’t just jump straight into that.
+Everything you’re seeing right now -- every side project, every upgrade --
+it’s all building toward being able to do that properly.
 
-That context **matters** because I’m not speaking from theory
-[PAUSE=180]
-I’m speaking from lived **experience**
-[HOLD=420]
+So how does all of this lead into a documentary?
 
-#A
-The people who pushed this country forward believed power had to be limited questioned and **justified**
-[HOLD=420]
+I’ll just say it plainly:
+We’re going to make the documentary using our own software.
+Software we’re building from scratch.
 
-That principle didn’t **expire**
-[PAUSE=200]
-It didn’t shrink just because the moment feels **small**
-[HOLD=420]
+What we’re actually building is a platform as a service --
+one that represents the ideal filmmaker and editor workflow,
+end-to-end.
 
-I didn’t come to this conversation as an idea
-[PAUSE=220]
-I came to it through **encounters** through **consequences** and through **hindsight**
-[HOLD=520]
+Capture, monitoring, storage, organization, editing, automation --
+all in one system.
 
-#default
-Every time I talk about this I hear the same thing
-[PAUSE=200]
-If you didn’t do anything wrong why does it **matter**
-[HOLD=360]
+And to bring this full circle to what we’re doing today,
+we’re upgrading the hardware that powers our backend camera agents.
 
-It matters because rights don’t exist only when you’re **guilty**
-[PAUSE=240]
-They exist to protect innocent people from unchecked **power**
-[HOLD=420]
+Right now, we’re using Raspberry Pis with USB capture card dongles.
+And they work.
+But working isn’t the same as designed.
 
-Every name check adds **weight**
-[PAUSE=200]
-Most people never see it but it doesn’t disappear
-[HOLD=360]
+These two boxes right here are upgrades.
 
-After years of warrants now being clean I want my work to speak for **itself**
-[PAUSE=260]
-But over aggressive policing doesn’t let the past stay in the **past**
-[HOLD=420]
+One is an M.2 expansion board.
+The other is a dedicated capture card HAT.
 
-The Fourth Amendment doesn’t work on a sliding **scale**
-[PAUSE=220]
-Either it applies or it **doesn’t**
-[HOLD=420]
+We’re moving our existing single-slot M.2 board
+from the top of the Raspberry Pi
+to the bottom -- out of the way --
+and that immediately gives us an additional M.2 slot.
 
-#B
-This isn’t about attitude
-[PAUSE=160]
-It isn’t about escalation
-[PAUSE=160]
-It’s about **process**
-[PAUSE=200]
-And process is where accountability **lives**
-[HOLD=520]
+More importantly,
+it lets us move away from a cheap HDMI-to-USB capture dongle
+and into a CSI ribbon-based camera capture system.
 
-#default
-You can feel it in the approach
-[PAUSE=200]
-They’re not looking for a crime they’re looking for a **reason**
-[HOLD=360]
+That gives us HDMI-in,
+HDMI-out,
+and full HDMI passthrough --
+all handled at the board level.
 
-At what point does a bathroom break at QuikTrip become an **investigation**
-[HOLD=420]
+Now here’s the important part:
+the NVMe storage isn’t being used to store media.
 
-I’m not accused of a crime
-[PAUSE=180]
-I’m not suspected of anything **specific**
-[PAUSE=220]
-And yet I’m not free to **leave**
-[HOLD=420]
+It’s being used as a cache buffer.
 
-That’s a **seizure**
-[PAUSE=200]
-The moment compliance is required the encounter stops being **voluntary**
-[HOLD=420]
+This Raspberry Pi runs a capture daemon --
+a supervised backend service --
+that uses NVMe as high-speed buffering
+so we can rescue dropped frames
+before and after sending video over the network
+to our central API gateway and media services.
 
-Without reasonable suspicion that detention is **unlawful**
-[PAUSE=220]
-This isn’t my opinion
-[PAUSE=160]
-It’s settled **law**
-[HOLD=480]
+Because let’s be honest:
+the whole point of this system
+is to eliminate memory cards entirely.
 
-#A
-This is where people say it’s just your **name**
-[PAUSE=200]
-It shouldn’t **matter**
-[HOLD=360]
+No more copying files.
+No more manual archiving.
+No more juggling cards between cameras and computers.
 
-But that mindset is what over aggressive policing depends **on**
-[PAUSE=260]
-Detain first
-[PAUSE=140]
-Run someone
-[PAUSE=140]
-See what turns **up**
-[HOLD=420]
+Everything lives inside our platform’s browser UI.
 
-That’s not policing
-[PAUSE=180]
-That’s **fishing**
-[HOLD=360]
+Camera monitoring.
+Camera controls.
+Digital asset management.
+Built-in timelines.
+Effects.
+SRT captions.
+And AI-assisted tooling layered on top.
 
-The Constitution exists to stop the government from fishing through innocent people hoping to justify what they already decided to **do**
-[HOLD=520]
+People hear all of that and say,
+"That sounds like a lot."
 
-#default
-There’s an imaginary middle ground where you’re detained but they call it **consensual**
-[HOLD=420]
+But when everything lives in one place,
+it just comes down to implementation.
 
-In reality detention is a **power** move
-[PAUSE=220]
-And if you’ve lived what I’ve lived you know exactly where that **leads**
-[HOLD=480]
+I don’t hear anyone telling Adobe
+that Creative Cloud is too cumbersome.
 
-If I did nothing wrong I want to leave as little footprint as **possible**
-[HOLD=420]
-
-#A
-So I filed a public records request
-[PAUSE=200]
-Not to attack anyone
-[PAUSE=160]
-Not to twist facts
-[PAUSE=160]
-But to see what the official record says actually **happened**
-[HOLD=480]
-
-If the system is working the record should tell the **truth**
-[PAUSE=200]
-Clearly completely accurately
-[HOLD=420]
-
-Two hundred **dollars**
-[PAUSE=200]
-Hundreds of **pages**
-[HOLD=420]
-
-And still what mattered most was **missing**
-[HOLD=520]
-
-#C
-I’ve lived what happens when survival becomes routine
-[PAUSE=240]
-When routine becomes **identity**
-[HOLD=480]
-
-There was a time when my existence really was a **crime**
-[PAUSE=260]
-Not because I wanted it to be but because I didn’t know any other way to **live**
-[HOLD=520]
-
-I carried that version of myself for **years**
-[PAUSE=220]
-And I earned every consequence that came with **it**
-[HOLD=480]
-
-But that’s not who I am **anymore**
-[HOLD=520]
-
-Today I wake up early make breakfast check homework and build **things**
-[HOLD=420]
-
-I raise three boys triplets who don’t know that version of **me**
-[HOLD=520]
-
-The past doesn’t disappear
-[PAUSE=200]
-It lingers in databases assumptions and half written **records**
-[HOLD=480]
-
-What scares me isn’t accountability
-[PAUSE=220]
-It’s incomplete **truth**
-[HOLD=520]
-
-Because when authority reaches back without context and without justification
-[PAUSE=260]
-It doesn’t punish who I was
-[PAUSE=180]
-It reaches for who I am **now**
-[HOLD=520]
-
-This isn’t about erasing the past
-[PAUSE=200]
-It’s about judging the present **honestly**
-[HOLD=480]
-
-Because redemption only matters if the system can **recognize** it
-[HOLD=520]
-
-Not for me
-[PAUSE=200]
-For my **kids**
-[HOLD=600]
+This is the same idea --
+just built for how I actually work.
