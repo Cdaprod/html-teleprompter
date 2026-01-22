@@ -432,8 +432,12 @@
 
                 this.initializeControls();
                 this.restorePreferences();
+                this.initializeData();
+            }
+
+            async initializeData() {
+                await this.loadDocs();
                 this.loadSavedTranscripts();
-                this.loadDocs();
                 this.loadProjects();
             }
 
@@ -484,9 +488,9 @@
                 document.getElementById('saveProjectScriptBtn').addEventListener('click', () => this.saveCurrentToProject());
 
                 this.fileSelect.addEventListener('change', () => {
-                    const content = this.files.get(this.fileSelect.value);
-                    if (content) {
-                        this.setContent(content);
+                    const entry = this.files.get(this.fileSelect.value);
+                    if (entry && entry.content) {
+                        this.setContent(entry.content);
                         this.updateSplitView();
                     }
                 });
@@ -623,7 +627,7 @@
                         throw new Error(`Missing ${fileUrl}`);
                     }
                     const content = await response.text();
-                    this.addTranscript(fileName, content, false);
+                    this.addTranscript(fileName, content, { source: 'docs', persist: false });
                     return true;
                 } catch (err) {
                     if (!silent) {
@@ -638,7 +642,7 @@
                 const loaded = await this.loadDocFile(this.DEFAULT_DOC_NAME, { silent: true });
                 if (loaded) {
                     this.fileSelect.value = this.DEFAULT_DOC_NAME;
-                    this.setContent(this.files.get(this.DEFAULT_DOC_NAME));
+                    this.setContent(this.files.get(this.DEFAULT_DOC_NAME).content);
                     this.updateSplitView();
                     this.loadedDocsOnce = true;
                     this.showStatus(`Loaded fallback docs/${this.DEFAULT_DOC_NAME}`);
@@ -646,7 +650,7 @@
                 }
 
                 if (!this.files.has(this.DEFAULT_DOC_NAME)) {
-                    this.addTranscript(this.DEFAULT_DOC_NAME, this.DEFAULT_DOC_CONTENT, true);
+                    this.addTranscript(this.DEFAULT_DOC_NAME, this.DEFAULT_DOC_CONTENT, { selectAfter: true, source: 'default', persist: false });
                     this.showStatus('Added built-in demo transcript');
                 }
             }
@@ -661,7 +665,7 @@
                 const didLoad = await this.loadDocFile(fileName);
                 if (didLoad) {
                     this.fileSelect.value = fileName;
-                    this.setContent(this.files.get(fileName));
+                    this.setContent(this.files.get(fileName).content);
                     this.updateSplitView();
                     this.showStatus(`Loaded docs/${fileName}`);
                 }
@@ -766,7 +770,7 @@
                     if (!response.ok) throw new Error('Unable to fetch project script');
                     const data = await response.json();
                     const displayName = `${project}/${scriptName}`;
-                    this.addTranscript(displayName, data.content, true);
+                    this.addTranscript(displayName, data.content, { selectAfter: true, source: 'project', persist: false });
                     this.projectScriptTitle.value = scriptName;
                     this.showStatus(`Loaded ${scriptName} from ${project}`);
                 } catch (err) {
@@ -817,14 +821,16 @@
                 reader.onload = (e) => {
                     const fileName = file.name;
                     const content = e.target.result;
-                    this.addTranscript(fileName, content, true);
+                    this.addTranscript(fileName, content, { selectAfter: true, source: 'upload' });
                     this.showStatus(`Uploaded ${fileName}`);
                 };
                 reader.readAsText(file);
             }
 
-            addTranscript(fileName, content, selectAfter = false) {
-                this.files.set(fileName, content);
+            addTranscript(fileName, content, { selectAfter = false, source = 'local', persist = true } = {}) {
+                if (!fileName || typeof content !== 'string') return;
+
+                this.files.set(fileName, { content, source });
 
                 if (!Array.from(this.fileSelect.options).some(opt => opt.value === fileName)) {
                     const option = document.createElement('option');
@@ -839,11 +845,17 @@
                     this.updateSplitView();
                 }
 
-                this.persistTranscripts();
+                if (persist && this.shouldPersistSource(source)) {
+                    this.persistTranscripts();
+                }
             }
 
             saveTranscripts() {
-                const data = Array.from(this.files.entries()).map(([name, content]) => ({ name, content }));
+                const data = Array.from(this.files.entries()).map(([name, entry]) => ({
+                    name,
+                    content: entry.content,
+                    source: entry.source
+                }));
 
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -861,11 +873,15 @@
                 reader.onload = (e) => {
                     try {
                         const data = JSON.parse(e.target.result);
+                        if (!Array.isArray(data)) {
+                            throw new Error('Invalid transcript format');
+                        }
                         this.files.clear();
                         this.fileSelect.innerHTML = '<option value="">Select transcript or upload...</option>';
 
-                        data.forEach(({ name, content }) => {
-                            this.addTranscript(name, content, false);
+                        data.forEach(({ name, content, source }) => {
+                            const normalizedSource = this.normalizeSource(source, 'import');
+                            this.addTranscript(name, content, { source: normalizedSource, persist: false });
                         });
 
                         this.showStatus(`Loaded ${data.length} transcripts`);
@@ -989,9 +1005,26 @@
                 }, duration);
             }
 
+            shouldPersistSource(source) {
+                return ['local', 'upload', 'import'].includes(source);
+            }
+
+            normalizeSource(source, fallback = 'local') {
+                if (!source) return fallback;
+                if (this.shouldPersistSource(source)) return source;
+                return fallback;
+            }
+
             persistTranscripts() {
-                const data = Array.from(this.files.entries()).map(([name, content]) => ({ name, content }));
-                localStorage.setItem('teleprompter_transcripts', JSON.stringify(data));
+                const data = Array.from(this.files.entries())
+                    .filter(([, entry]) => this.shouldPersistSource(entry.source))
+                    .map(([name, entry]) => ({ name, content: entry.content, source: entry.source }));
+
+                if (data.length) {
+                    localStorage.setItem('teleprompter_transcripts', JSON.stringify(data));
+                } else {
+                    localStorage.removeItem('teleprompter_transcripts');
+                }
             }
 
             loadSavedTranscripts() {
@@ -999,8 +1032,24 @@
                     const saved = localStorage.getItem('teleprompter_transcripts');
                     if (!saved) return;
                     const data = JSON.parse(saved);
-                    data.forEach(({ name, content }) => this.addTranscript(name, content, false));
-                    this.showStatus(`Restored ${data.length} transcript(s)`);
+                    if (!Array.isArray(data)) {
+                        throw new Error('Saved transcripts are not a list');
+                    }
+
+                    let loaded = 0;
+                    data.forEach(({ name, content, source }) => {
+                        if (!name || typeof content !== 'string') return;
+                        if (this.files.has(name) && this.files.get(name).source === 'docs') return;
+                        const normalizedSource = this.normalizeSource(source, 'local');
+                        if (!this.shouldPersistSource(normalizedSource)) return;
+                        this.addTranscript(name, content, { source: normalizedSource, persist: false });
+                        loaded += 1;
+                    });
+
+                    if (loaded) {
+                        this.showStatus(`Restored ${loaded} transcript(s)`);
+                    }
+                    this.persistTranscripts();
                 } catch (err) {
                     console.warn('No saved transcripts found', err);
                 }
