@@ -1,5 +1,6 @@
 """FastAPI workspace API smoke tests."""
 import importlib
+import json
 import os
 import sys
 from pathlib import Path
@@ -60,3 +61,17 @@ def test_project_script_and_export(tmp_path):
 
     projects = client.get("/api/projects").json()["projects"]
     assert "demo" in projects
+
+
+def test_docs_manifest_refresh(tmp_path):
+    client = load_app(tmp_path)
+
+    response = client.get("/api/docs/list?refresh=1")
+    assert response.status_code == 200
+    payload = response.json()
+    assert "docs" in payload
+    assert "demo-list.txt" in payload["docs"]
+
+    manifest_path = Path(__file__).resolve().parent.parent / "public" / "docs" / "list.json"
+    manifest = json.loads(manifest_path.read_text())
+    assert "demo-list.txt" in manifest

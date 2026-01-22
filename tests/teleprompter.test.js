@@ -57,6 +57,10 @@ try {
     indexHtml.includes('normalizeSource'),
     'Teleprompter should normalize transcript sources when loading saved data'
   );
+  assert(
+    indexHtml.includes('/api/docs/list'),
+    'Teleprompter should request /api/docs/list to refresh docs manifests without a build step'
+  );
 
   // Manifest and docs directory checks
   assert(Array.isArray(manifest), 'docs/list.json must be a JSON array');
