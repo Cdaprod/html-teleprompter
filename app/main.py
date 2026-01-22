@@ -26,6 +26,8 @@ def _get_projects_root() -> Path:
 PROJECTS_ROOT: Path = _get_projects_root()
 PUBLIC_DIR = Path(__file__).resolve().parent.parent / "public"
 INDEX_FILE = PUBLIC_DIR / "index.html"
+DOCS_DIR = PUBLIC_DIR / "docs"
+DOCS_MANIFEST = DOCS_DIR / "list.json"
 
 
 class ProjectCreate(BaseModel):
@@ -108,6 +110,23 @@ def _script_path(project: str, script_name: str) -> Path:
     if scripts_dir.resolve() not in target.parents and scripts_dir.resolve() != target.parent:
         raise HTTPException(status_code=400, detail="Script path traversal blocked")
     return target
+
+
+def _list_docs_files() -> List[str]:
+    if not DOCS_DIR.exists():
+        return []
+    return sorted(
+        path.name
+        for path in DOCS_DIR.iterdir()
+        if path.is_file() and path.suffix.lower() in {".txt", ".md"}
+    )
+
+
+def _refresh_docs_manifest() -> List[str]:
+    doc_files = _list_docs_files()
+    DOCS_DIR.mkdir(parents=True, exist_ok=True)
+    DOCS_MANIFEST.write_text(json.dumps(doc_files, indent=2))
+    return doc_files
 
 
 origins = os.getenv("TELEPROMPTER_CORS_ORIGINS", "*")
@@ -236,6 +255,23 @@ def export_script(
     )
 
     return {"exports": {"text": str(text_export), "prompt": str(prompt_export)}}
+
+
+@app.get("/api/docs/list")
+def list_docs(refresh: bool = False) -> dict:
+    """Return the docs manifest and optionally refresh list.json on demand.
+
+    Usage: GET /api/docs/list?refresh=1
+    Example: curl http://localhost:8790/api/docs/list?refresh=1
+    """
+    try:
+        if refresh or not DOCS_MANIFEST.exists():
+            doc_files = _refresh_docs_manifest()
+        else:
+            doc_files = json.loads(DOCS_MANIFEST.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=500, detail=f"Unable to read docs manifest: {exc}") from exc
+    return {"docs": doc_files}
 
 
 if INDEX_FILE.exists():

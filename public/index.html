@@ -592,17 +592,12 @@
                 let loadedCount = 0;
 
                 try {
-                    const response = await fetch('docs/list.json', { cache: 'no-cache' });
-                    if (response.ok) {
-                        const docFiles = await response.json();
+                    const docFiles = await this.fetchDocsList(forceReload);
 
-                        for (const fileName of docFiles) {
-                            if (!fileName.endsWith('.txt') && !fileName.endsWith('.md')) continue;
-                            const didLoad = await this.loadDocFile(fileName, { silent: true });
-                            if (didLoad) loadedCount++;
-                        }
-                    } else {
-                        this.showStatus('docs/list.json missing. Add docs/ files or refresh.', 4000);
+                    for (const fileName of docFiles) {
+                        if (!fileName.endsWith('.txt') && !fileName.endsWith('.md')) continue;
+                        const didLoad = await this.loadDocFile(fileName, { silent: true });
+                        if (didLoad) loadedCount++;
                     }
                 } catch (err) {
                     console.warn('Error loading docs/list.json', err);
@@ -617,6 +612,29 @@
                     this.showStatus(`Loaded ${loadedCount} transcript(s) from docs/`, 3000);
                     this.loadedDocsOnce = true;
                 }
+            }
+
+            async fetchDocsList(forceRefresh = false) {
+                const endpoints = [];
+                if (forceRefresh) {
+                    endpoints.push('/api/docs/list?refresh=1');
+                }
+                endpoints.push('/api/docs/list');
+                endpoints.push('docs/list.json');
+
+                for (const endpoint of endpoints) {
+                    try {
+                        const response = await fetch(endpoint, { cache: 'no-cache' });
+                        if (!response.ok) continue;
+                        const payload = await response.json();
+                        if (Array.isArray(payload)) return payload;
+                        if (Array.isArray(payload.docs)) return payload.docs;
+                    } catch (error) {
+                        console.warn('Docs list fetch failed', endpoint, error);
+                    }
+                }
+
+                throw new Error('Unable to load docs list');
             }
 
             async loadDocFile(fileName, { silent = false } = {}) {
