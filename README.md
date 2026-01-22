@@ -24,6 +24,7 @@ Modernized, single-page teleprompter with stream background, transcript library 
   - Auto-loads `docs/list.json` alongside `index.html` (example provided for `docs/demo-list.txt`).
   - Manual fetch via "Add from docs/" for any `docs/<filename>` you place next to `index.html`.
   - Upload multiple `.txt` or `.md` files directly.
+  - Create an empty `docs/<name>.txt` file and refresh `docs/list.json` from the **Create project + docs file** button when the browser supports the File System Access API.
   - Persist and restore transcripts and preferences via localStorage.
   - Save and reopen scripts from workspace projects through the FastAPI service.
 - Presentation tools: mirror mode, split-view clone, adjustable font size, line height, width, and speed.
@@ -103,4 +104,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSES.md) 
   </p>
   <p><strong>Built with ❤️ by <a href="https://github.com/Cdaprod">David Cannan</a></strong><br/>Transforming how we discover, process, and manage digital media through AI.</p>
 </div>
-

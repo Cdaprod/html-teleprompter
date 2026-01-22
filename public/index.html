@@ -340,13 +340,13 @@
 
             <div class="control-group" style="grid-column: span 2;">
                 <div class="input-stack" style="width: 100%;">
-                    <span class="control-title">Project workspace</span>
+                    <span class="control-title">Project workspace + docs seed</span>
                     <div class="control-group" style="width: 100%;">
                         <select id="projectSelect">
                             <option value="">Select project...</option>
                         </select>
-                        <input type="text" id="projectNameInput" placeholder="New project name" style="flex: 1; min-width: 180px;">
-                        <button id="createProjectBtn">Create project</button>
+                        <input type="text" id="projectNameInput" placeholder="New project name (also creates docs file)" style="flex: 1; min-width: 180px;">
+                        <button id="createProjectBtn">Create project + docs file</button>
                         <button id="refreshProjectsBtn" class="ghost-btn">Refresh projects</button>
                     </div>
                     <div class="control-group" style="width: 100%;">
@@ -614,6 +614,80 @@
                 }
             }
 
+            normalizeDocFileName(name) {
+                const trimmed = name.trim();
+                if (!trimmed) return '';
+                const hasExtension = trimmed.endsWith('.txt') || trimmed.endsWith('.md');
+                const normalized = hasExtension ? trimmed : `${trimmed}.txt`;
+                if (normalized.includes('/') || normalized.includes('\\') || normalized.includes('..')) {
+                    return '';
+                }
+                return normalized;
+            }
+
+            async pickDocsDirectory() {
+                if (this.docsDirectoryHandle) return this.docsDirectoryHandle;
+                if (!window.showDirectoryPicker) {
+                    throw new Error('This browser does not support direct file creation.');
+                }
+                this.docsDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                return this.docsDirectoryHandle;
+            }
+
+            async readDocsManifest(docsHandle) {
+                try {
+                    const manifestHandle = await docsHandle.getFileHandle('list.json');
+                    const file = await manifestHandle.getFile();
+                    const text = await file.text();
+                    if (!text.trim()) return [];
+                    const parsed = JSON.parse(text);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (err) {
+                    return [];
+                }
+            }
+
+            async writeDocsManifest(docsHandle, manifest) {
+                const manifestHandle = await docsHandle.getFileHandle('list.json', { create: true });
+                const writable = await manifestHandle.createWritable();
+                await writable.write(JSON.stringify(manifest, null, 2));
+                await writable.close();
+            }
+
+            async ensureDocsFile(docsHandle, fileName) {
+                let fileHandle;
+                let created = false;
+
+                try {
+                    fileHandle = await docsHandle.getFileHandle(fileName);
+                } catch (err) {
+                    fileHandle = await docsHandle.getFileHandle(fileName, { create: true });
+                    created = true;
+                }
+
+                if (created) {
+                    const writable = await fileHandle.createWritable();
+                    await writable.write('');
+                    await writable.close();
+                }
+
+                return { fileHandle, created };
+            }
+
+            async seedDocsFile(fileName) {
+                const docsHandle = await this.pickDocsDirectory();
+                const { created } = await this.ensureDocsFile(docsHandle, fileName);
+                const manifest = await this.readDocsManifest(docsHandle);
+                const nextManifest = Array.from(new Set([...manifest, fileName])).sort();
+                const manifestUpdated = nextManifest.length !== manifest.length;
+
+                if (manifestUpdated) {
+                    await this.writeDocsManifest(docsHandle, nextManifest);
+                }
+
+                return { created, manifestUpdated };
+            }
+
             async fetchDocsList(forceRefresh = false) {
                 const endpoints = [];
                 if (forceRefresh) {
@@ -732,6 +806,26 @@
                     return;
                 }
 
+                const docFileName = this.normalizeDocFileName(name);
+                if (!docFileName) {
+                    this.showStatus('Use a simple name without slashes for docs files');
+                    return;
+                }
+
+                let docsSeeded = false;
+                try {
+                    const { created, manifestUpdated } = await this.seedDocsFile(docFileName);
+                    docsSeeded = created || manifestUpdated;
+                    if (docsSeeded) {
+                        this.addTranscript(docFileName, '', { selectAfter: true, source: 'docs', persist: false });
+                        await this.loadDocs(true);
+                        this.showStatus(`Created docs/${docFileName} and refreshed list.json`);
+                    }
+                } catch (err) {
+                    console.warn('Docs file creation failed', err);
+                    this.showStatus('Unable to create docs file (select your public/docs folder)');
+                }
+
                 try {
                     const response = await fetch('/api/projects', {
                         method: 'POST',
@@ -747,7 +841,9 @@
                     await this.loadProjectScripts(name);
                 } catch (err) {
                     console.error(err);
-                    this.showStatus('Could not create project');
+                    if (!docsSeeded) {
+                        this.showStatus('Could not create project');
+                    }
                 }
             }
 

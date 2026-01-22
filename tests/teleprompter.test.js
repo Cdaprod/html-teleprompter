@@ -61,6 +61,14 @@ try {
     indexHtml.includes('/api/docs/list'),
     'Teleprompter should request /api/docs/list to refresh docs manifests without a build step'
   );
+  assert(
+    indexHtml.includes('seedDocsFile'),
+    'Teleprompter should seed docs files and update list.json from the UI'
+  );
+  assert(
+    indexHtml.includes('showDirectoryPicker'),
+    'Teleprompter should use the File System Access API to create docs files when available'
+  );
 
   // Manifest and docs directory checks
   assert(Array.isArray(manifest), 'docs/list.json must be a JSON array');
