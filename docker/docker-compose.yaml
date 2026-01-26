@@ -13,5 +13,5 @@ services:
       - ..:/app
       - ${PROJECTS_PATH:-./projects}:/data/projects
     ports:
-      - "8790:8790"
+      - "8798:8790"
     restart: unless-stopped
